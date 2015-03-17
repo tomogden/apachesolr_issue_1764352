@@ -1,0 +1,34 @@
+diff --git a/apachesolr.admin.inc b/apachesolr.admin.inc
+index f84d503..d4e51bb 100644
+--- a/apachesolr.admin.inc
++++ b/apachesolr.admin.inc
+@@ -530,6 +530,13 @@ function apachesolr_settings(array $form, array &$form_state) {
+     '#default_value' => variable_get('apachesolr_watchdog_successes', TRUE),
+   );
+ 
++  $form['advanced']['apachesolr_cron_indexing_enabled'] = array(
++    '#type' => 'checkbox',
++    '#title' => t('Enable indexing on Drupal cron.'),
++    '#description' => t('Turn ON indexing during regular Drupal cron runs.'),
++    '#default_value' => variable_get('apachesolr_cron_indexing_enabled', TRUE),
++  );
++
+   return system_settings_form($form);
+ }
+ 
+diff --git a/apachesolr.module b/apachesolr.module
+index b7556f3..4a55e6c 100644
+--- a/apachesolr.module
++++ b/apachesolr.module
+@@ -946,6 +946,11 @@ function apachesolr_get_last_index_updated($env_id) {
+  * Runs the indexing process on all writable environments or just a given environment.
+  */
+ function apachesolr_cron($env_id = NULL) {
++  // Stop indexing if not enabled in settings.
++  if (!variable_get('apachesolr_cron_indexing_enabled', TRUE)) {
++    return;
++  }
++
+   $environments = array();
+   if (empty($env_id)) {
+     $environments = array_keys(apachesolr_load_all_environments());
